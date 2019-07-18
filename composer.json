@@ -1,0 +1,19 @@
+{
+    "name": "kejawenlab/nusantara",
+    "description": "Nusantara adalah Script untuk mengambil data terbaru daerah di Indoensia mulai dari Propinsi hingga Desa/Kelurahan",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^7.2",
+        "symfony/http-client": "^4.3",
+        "symfony/dom-crawler": "^4.3"
+    },
+    "suggest": {
+        "symfony/console": "Untuk menggunakan Nusantara dalam console application"
+    },
+    "autoload": {
+        "psr-4": {
+            "KejawenLab\\Nusantara\\": "src/"
+        }
+    }
+}

@@ -1,0 +1,22 @@
+#!/usr/bin/env php
+<?php
+
+include __DIR__.'/vendor/autoload.php';
+
+use KejawenLab\Nusantara\Nusantara;
+use Symfony\Component\Console\Output\ConsoleOutput;
+
+$output = new ConsoleOutput();
+$nusantara = new Nusantara();
+
+$output->writeln([
+    '<comment>KEJAWENLAB NUSANTARA</comment>',
+    '<info>Perangkat untuk memperoleh data wilayah termuktahir di Indonesia.</info>',
+    '=================================================================',
+]);
+
+file_put_contents(__DIR__.'/wilayah.json', json_encode($nusantara->fetch($output)));
+
+$output->writeln('Menyimpan data.');
+
+$output->writeln('<info>Pemrosesan telah selesai.</info>');
