@@ -4,10 +4,18 @@ Nusantara adalah Script untuk mengambil data terbaru daerah di Indoensia mulai d
 
 ## Instalasi
 
+* Cloning
+
 ```bash
 git clone https://github.com/KejawenLab/Nusantara
 cd Nusantara
 composer update --prefer-dist -vvv
+```
+
+* Untuk Existing Project
+
+```bash
+composer req kejawenlab/nusantara
 ```
 
 ## Cara Menggunakan
