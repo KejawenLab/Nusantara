@@ -42,7 +42,7 @@ class Nusantara
                 }
 
                 $crawler = new Crawler($response->getContent());
-                $trs = $crawler->filterXPath('//table[@cellpadding="5"]/tr[@class="table_content"]');
+                $trs = $crawler->filterXPath('//tr[@class="table_content"]');
 
                 if ($output) {
                     $output->writeln('<info>Memproses data.</info>');
