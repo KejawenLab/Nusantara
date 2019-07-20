@@ -15,8 +15,19 @@ $output->writeln([
     '=================================================================',
 ]);
 
-file_put_contents(__DIR__.'/wilayah.json', json_encode($nusantara->fetch($output)));
+$start = microtime(true);
+file_put_contents(__DIR__.'/wilayah.json', json_encode($nusantara->fetch(Nusantara::SCOPE_DESA, $output)));
+$end = microtime(true);
+$second = $end - $start;
+$minute = round($second / 60);
+$hour = 0;
+if ($minute > 0) {
+    $second = (int) $second - ($minute * 60);
+    $hour = round($minute / 60);
+    if ($hour > 0) {
+        $minute = (int) $minute - ($hour * 60);
+    }
+}
 
-$output->writeln('Menyimpan data.');
-
-$output->writeln('<info>Pemrosesan telah selesai.</info>');
+$output->writeln('<comment>Menyimpan data.</comment>');
+$output->writeln(sprintf('<comment>Pemrosesan telah selesai dalam "<info>%s</info>" jam "<info>%s</info>" menit "<info>%s</info>" detik</comment>', $hour, $minute, number_format($second, 2)));

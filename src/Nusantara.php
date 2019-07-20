@@ -16,13 +16,22 @@ use Symfony\Component\HttpClient\Exception\TransportException;
  */
 class Nusantara
 {
+    public const SCOPE_PROPINSI = 'prop';
+    public const SCOPE_KABUPATEN = 'kab';
+    public const SCOPE_KECAMATAN = 'kec';
+    public const SCOPE_DESA = 'desa';
+
     public const NUSANTARA_URL = 'http://mfdonline.bps.go.id/index.php?link=hasil_pencarian';
 
-    public function fetch(OutputInterface $output = null): array
+    public function fetch(string $scope = self::SCOPE_DESA, OutputInterface $output = null): array
     {
         $searchKeys = ['a', 'i', 'u', 'e', 'o'];
         $client = new CurlHttpClient();
         $results = [];
+
+        if ($output) {
+            $output->writeln(sprintf('<comment>Batas pencarian adalah sampai level "<info>%s</info>"</comment>', ucfirst($scope)));
+        }
 
         foreach ($searchKeys as $searchKey) {
             try {
@@ -32,7 +41,7 @@ class Nusantara
 
                 $response = $client->request('POST', self::NUSANTARA_URL, [
                     'body' => [
-                        'pilihcari' => 'desa',
+                        'pilihcari' => $scope,
                         'kata_kunci' => $searchKey,
                     ]
                 ]);
@@ -44,12 +53,13 @@ class Nusantara
                 $crawler = new Crawler($response->getContent());
                 $trs = $crawler->filterXPath('//tr[@class="table_content"]');
 
+                $progress = null;
                 if ($output) {
                     $output->writeln('<info>Memproses data.</info>');
                     $progress = new ProgressBar($output, $trs->count());
                 }
 
-                $trs->each(function (Crawler $tr) use (&$results, $output, $progress) {
+                $trs->each(function (Crawler $tr) use (&$results, $scope, $output, $progress) {
                     if ($output) {
                         $progress->advance();
                     }
@@ -58,16 +68,6 @@ class Nusantara
 
                     $provinceCode = trim($tds->eq(1)->text());
                     $provinceName = trim($tds->eq(2)->text());
-
-                    $districtCode = sprintf('%s%s', $provinceCode, trim($tds->eq(3)->text()));
-                    $districtName = trim($tds->eq(4)->text());
-
-                    $subDistrictCode = sprintf('%s%s', $districtCode, trim($tds->eq(5)->text()));
-                    $subDistrictName = trim($tds->eq(6)->text());
-
-                    $villageCode = sprintf('%s%s', $subDistrictCode, trim($tds->eq(7)->text()));
-                    $villageName = trim($tds->eq(8)->text());
-
                     if (!array_key_exists($provinceCode, $results)) {
                         $results[$provinceCode] = [
                             'name' => $provinceName,
@@ -75,22 +75,41 @@ class Nusantara
                         ];
                     }
 
-                    if (!array_key_exists($districtCode, $results[$provinceCode]['district'])) {
-                        $results[$provinceCode]['district'][$districtCode] = [
-                            'name' => $districtName,
-                            'sub_district' => [],
-                        ];
-                    }
+                    if ($scope !== self::SCOPE_PROPINSI) {
+                        $districtCode = sprintf('%s%s', $provinceCode, trim($tds->eq(3)->text()));
+                        $districtName = trim($tds->eq(4)->text());
+                        if (!array_key_exists($districtCode, $results[$provinceCode]['district'])) {
+                            $results[$provinceCode]['district'][$districtCode] = [
+                                'name' => $districtName,
+                                'sub_district' => [],
+                            ];
+                        }
 
-                    if (!array_key_exists($subDistrictCode, $results[$provinceCode]['district'][$districtCode]['sub_district'])) {
-                        $results[$provinceCode]['district'][$districtCode]['sub_district'][$subDistrictCode] = [
-                            'name' => $subDistrictName,
-                            'village' => [],
-                        ];
-                    }
+                        if ($scope === self::SCOPE_KECAMATAN) {
+                            $subDistrictCode = sprintf('%s%s', $districtCode, trim($tds->eq(5)->text()));
+                            $subDistrictName = trim($tds->eq(6)->text());
+                            if (!array_key_exists($subDistrictCode, $results[$provinceCode]['district'][$districtCode]['sub_district'])) {
+                                $results[$provinceCode]['district'][$districtCode]['sub_district'][$subDistrictCode] = [
+                                    'name' => $subDistrictName,
+                                    'village' => [],
+                                ];
+                            }
+                        } else if ($scope === self::SCOPE_DESA) {
+                            $subDistrictCode = sprintf('%s%s', $districtCode, trim($tds->eq(5)->text()));
+                            $subDistrictName = trim($tds->eq(6)->text());
+                            if (!array_key_exists($subDistrictCode, $results[$provinceCode]['district'][$districtCode]['sub_district'])) {
+                                $results[$provinceCode]['district'][$districtCode]['sub_district'][$subDistrictCode] = [
+                                    'name' => $subDistrictName,
+                                    'village' => [],
+                                ];
+                            }
 
-                    if (!array_key_exists($villageCode, $results[$provinceCode]['district'][$districtCode]['sub_district'][$subDistrictCode]['village'])) {
-                        $results[$provinceCode]['district'][$districtCode]['sub_district'][$subDistrictCode]['village'][$villageCode] = $villageName;
+                            $villageCode = sprintf('%s%s', $subDistrictCode, trim($tds->eq(7)->text()));
+                            $villageName = trim($tds->eq(8)->text());
+                            if (!array_key_exists($villageCode, $results[$provinceCode]['district'][$districtCode]['sub_district'][$subDistrictCode]['village'])) {
+                                $results[$provinceCode]['district'][$districtCode]['sub_district'][$subDistrictCode]['village'][$villageCode] = $villageName;
+                            }
+                        }
                     }
                 });
 
