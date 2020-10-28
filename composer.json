@@ -6,11 +6,9 @@
     "require": {
         "php": "^7.2",
         "ext-json": "*",
-        "symfony/http-client": "^4.3",
-        "symfony/dom-crawler": "^4.3"
-    },
-    "suggest": {
-        "symfony/console": "Untuk menggunakan Nusantara dalam console application"
+        "symfony/http-client": "^5.1",
+        "symfony/dom-crawler": "^5.1",
+        "symfony/console": "^5.1"
     },
     "autoload": {
         "psr-4": {
